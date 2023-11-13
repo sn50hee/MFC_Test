@@ -10,6 +10,10 @@
 #include "afxwin.h"
 #include <iostream>
 
+#include <fstream>
+#include <vector>
+#include <windows.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -165,12 +169,12 @@ void CMFCTestDlg::OnBnClickedButtonRun()
 {
 	CString strDefaultPath = _T("");
 
-	CFileDialog dlg(TRUE, _T("Files (*.txt)"), NULL,
+	CFileDialog dlg(TRUE, _T("Files (*.wav)"), NULL,
 		OFN_FILEMUSTEXIST |		// 존재하는 파일만 선택 가능
 		OFN_PATHMUSTEXIST |	    // 존재하는 경로만 선택 가능
 		OFN_HIDEREADONLY |		// ReadOnly 체크박스 숨김
 		OFN_LONGNAMES			//긴 파일 이름 포맷 지원
-		, _T("Files (*.txt)|*.txt|All Files (*.*)|*.*|"));
+		, _T("Files (*.wav)|*.wav|All Files (*.*)|*.*|"));
 
 	// 파일이 선택 된다면 문장 실행
 	if (IDOK == dlg.DoModal())
@@ -178,26 +182,33 @@ void CMFCTestDlg::OnBnClickedButtonRun()
 		// 경로 가져오기
 		strDefaultPath = dlg.GetPathName();
 
+		// WAV 파일 읽기
 		CStdioFile file;
-
-		// 파일 읽기 모드로 열기
-		file.Open(strDefaultPath, CFile::modeRead);
-
-		CString allstr;
-		CString strTmp;
-
-		// IDC_EDIT_FILE의 내용을 수정
-		UpdateData(TRUE);
-		// 한 줄씩 파일 읽고 IDC_EDIT_FILE(변수명: print_file)에 내용 추가
-		while (file.ReadString(strTmp))
+		if (file.Open(strDefaultPath, CFile::modeRead))
 		{
-			print_file += strTmp;
-			print_file += "\r\n";
+			// WAV 헤더 읽기
+			WavHeader header;
+			file.Read(&header, sizeof(WavHeader));
+
+			// 데이터 부분을 읽어 벡터에 저장
+			std::vector<short> audioData;
+			short sample;
+			// short 크기만큼 데이터를 읽어서 sample에 저장
+			while (file.Read(&sample, sizeof(short))) {
+				// push_back(): 벡터에 추가
+				audioData.push_back(sample);
+			}
+
+			// 파일 닫기
+			file.Close();
+
+			// Edit Control에 데이터 출력
+			CString outputText;
+			for (const auto& sample : audioData) {
+				outputText.AppendFormat(_T("%d\r\n"), sample);
+			}
+			SetDlgItemText(IDC_EDIT_FILE, outputText);
 		}
-		// IDC_EDIT_FILE의 내용을 수정을 멈춤
-		UpdateData(FALSE);
-		// 파일 닫기
-		file.Close();
 	}
 
 	
