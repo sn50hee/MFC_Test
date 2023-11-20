@@ -10,6 +10,7 @@
 #define IDC_EDIT_A                      1000
 #define IDC_EDIT_FILE                   1000
 #define IDC_BUTTON_RUN                  1003
+#define btn_play                        1004
 
 // Next default values for new objects
 // 

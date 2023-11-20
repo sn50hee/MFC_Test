@@ -8,6 +8,7 @@
 #include "MFC_TestDlg.h"
 #include "afxdialogex.h"
 #include "afxwin.h"
+#include "WavFileHandler.h"
 #include <iostream>
 
 #include <fstream>
@@ -77,6 +78,7 @@ BEGIN_MESSAGE_MAP(CMFCTestDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RUN, &CMFCTestDlg::OnBnClickedButtonRun)
 	ON_WM_CTLCOLOR()
 //	ON_WM_ICONERASEBKGND()
+ON_BN_CLICKED(btn_play, &CMFCTestDlg::OnBnClickedplay)
 END_MESSAGE_MAP()
 
 
@@ -182,33 +184,19 @@ void CMFCTestDlg::OnBnClickedButtonRun()
 		// 경로 가져오기
 		strDefaultPath = dlg.GetPathName();
 
-		// WAV 파일 읽기
-		CStdioFile file;
-		if (file.Open(strDefaultPath, CFile::modeRead))
-		{
-			// WAV 헤더 읽기
-			WavHeader header;
-			file.Read(&header, sizeof(WavHeader));
+		WavFileHandler wavHandler;
+		wavHandler.ReadWavFile(strDefaultPath);
+		//if (wavHandler.ReadWavFile(strDefaultPath)) {
+		//	CString outputText;
+		//	for (const auto& sample : wavHandler.GetAudioData()) {
+		//		outputText.AppendFormat(_T("%d\r\n"), sample);
+		//	}
+		//	SetDlgItemText(IDC_EDIT_FILE, outputText);
+		//}
+		//else {
+		//	AfxMessageBox(_T("Failed to read the WAV file."));
+		//}
 
-			// 데이터 부분을 읽어 벡터에 저장
-			std::vector<short> audioData;
-			short sample;
-			// short 크기만큼 데이터를 읽어서 sample에 저장
-			while (file.Read(&sample, sizeof(short))) {
-				// push_back(): 벡터에 추가
-				audioData.push_back(sample);
-			}
-
-			// 파일 닫기
-			file.Close();
-
-			// Edit Control에 데이터 출력
-			CString outputText;
-			for (const auto& sample : audioData) {
-				outputText.AppendFormat(_T("%d\r\n"), sample);
-			}
-			SetDlgItemText(IDC_EDIT_FILE, outputText);
-		}
 	}
 
 	
@@ -226,4 +214,10 @@ HBRUSH CMFCTestDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	}
 
 	return hbr;
+}
+
+void CMFCTestDlg::OnBnClickedplay()
+{
+
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 }
