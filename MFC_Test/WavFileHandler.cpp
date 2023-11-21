@@ -15,9 +15,6 @@ void WavFileHandler::ReadWavFile(const CString& filePath) {
         // 헤더 정보 읽기
         file.read((char*)&wavHeader, sizeof(WavHeader));
 
-        while (FindDataChunk(file) && !file.eof()) {
-
-        }
         // "data" 청크 찾기
         while (strncmp(wavHeader.data, "data", 4) != 0 && !file.eof()) {
             char fint_d;
