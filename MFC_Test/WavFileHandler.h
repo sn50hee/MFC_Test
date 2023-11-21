@@ -23,8 +23,6 @@ class WavFileHandler
 {
 public:
 	void ReadWavFile(const CString& filePath);
-	const std::vector<short>& GetAudioData() const;
-    bool FindDataChunk(std::ifstream& file);
 
 
 private:
