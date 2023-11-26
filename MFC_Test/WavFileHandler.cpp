@@ -15,29 +15,11 @@ void WavFileHandler::ReadWavFile(const CString& filePath) {
         // 헤더 정보 읽기
         file.read((char*)&wavHeader, sizeof(WavHeader));
 
-        // "data" 청크 찾기
         while (strncmp(wavHeader.data, "data", 4) != 0 && !file.eof()) {
-            char fint_d;
-            file.read(&fint_d, sizeof(fint_d));
-            if (fint_d == 'd') {
-                char fint_a;
-                file.read(&fint_a, sizeof(fint_a));
-                if (fint_a == 'a') {
-                    char fint_t;
-                    file.read(&fint_t, sizeof(fint_t));
-                    if (fint_t == 't') {
-                        char fint_a2;
-                        file.read(&fint_a2, sizeof(fint_a2));
-                        if (fint_a2 == 'a') {
-                            wavHeader.data[0] = fint_d;
-                            wavHeader.data[1] = fint_a;
-                            wavHeader.data[2] = fint_t;
-                            wavHeader.data[3] = fint_a2;
-                            file.read((char*)&wavHeader.dataSize, sizeof(wavHeader.dataSize));
-                        }
-                    }
-                }
-            }
+            char* infoChunk = new char[wavHeader.dataSize];
+            file.read(infoChunk, wavHeader.dataSize);
+            file.read((char*)&wavHeader.data, sizeof(wavHeader.data));
+            file.read((char*)&wavHeader.dataSize, sizeof(wavHeader.dataSize));
         }
 
         // "data" 청크를 찾지 못한 경우 에러 출력
@@ -68,6 +50,15 @@ void WavFileHandler::ReadWavFile(const CString& filePath) {
         wfx.wFormatTag = WAVE_FORMAT_PCM;
         wfx.nBlockAlign = (wfx.wBitsPerSample * wfx.nChannels) >> 3;
         wfx.nAvgBytesPerSec = wfx.nBlockAlign * wfx.nSamplesPerSec;
+
+        if (waveOutOpen(&hWaveOut, WAVE_MAPPER, &wfx, 0, 0, CALLBACK_NULL) != MMSYSERR_NOERROR) {
+            std::cerr << "오류: 오디오 출력을 열 수 없습니다." << std::endl;
+            file.close();
+            return;
+        }
+
+        //int chunkSize = wavHeader.dataSize/1024;
+        //char* buffer = new char[chunkSize];
 
         // WAV 출력 열기
         if (waveOutOpen(&hWaveOut, WAVE_MAPPER, &wfx, 0, 0, CALLBACK_NULL) == MMSYSERR_NOERROR) {
