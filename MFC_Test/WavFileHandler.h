@@ -23,7 +23,7 @@ class WavFileHandler
 {
 public:
 	void ReadWavFile(const CString& filePath);
-
+    void PlayMusic(const char* data, int dataSize, const WavHeader& wavHeader);
 
 private:
 	WavHeader wavHeader;
