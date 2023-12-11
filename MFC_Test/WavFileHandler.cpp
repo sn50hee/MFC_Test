@@ -51,7 +51,7 @@ void PlayMusic(const char* data, int dataSize, const WavHeader& wavHeader) {
     waveOutClose(hWaveOut);
 }
 
-void BufferAndPlayMusic(const CString& filePath) {
+void ReadDataAndPlayMusicThread(const CString& filePath) {
     WavHeader wavHeader;
     std::vector<char> buffer;
 
@@ -62,7 +62,6 @@ void BufferAndPlayMusic(const CString& filePath) {
         file.read((char*)&wavHeader, sizeof(WavHeader));
         int wavHeaderSize = sizeof(WavHeader);
 
-        // "data" 청크를 찾을 때까지 반복
         while (strncmp(wavHeader.data, "data", 4) != 0 && !file.eof()) {
             char* infoChunk = new char[wavHeader.dataSize];
             file.read(infoChunk, wavHeader.dataSize);
@@ -85,22 +84,20 @@ void BufferAndPlayMusic(const CString& filePath) {
         // 데이터 크기만큼 버퍼 할당
         buffer.resize(wavHeader.dataSize);
 
-        // 첫 번째 데이터를 버퍼에 읽어두기
-        // file.read(buffer.data(), wavHeader.dataSize);
-
         // 데이터를 1024개의 샘플로 나누어 읽기
-        const int bytesPerRead = wavHeader.dataSize/1024;
+        const int bytesPerRead = wavHeader.dataSize / 1024;
 
-        int bytesRead = wavHeaderSize;
+        int bytesRead = 0;
         while (bytesRead < wavHeader.dataSize) {
-            // 새로운 데이터를 버퍼에 추가
-            int bytesToRead = min(bytesPerRead, wavHeader.dataSize - bytesRead);
+            int remainingBytes = wavHeader.dataSize - bytesRead;
+            int bytesToRead = min(remainingBytes, bytesPerRead);
+
             file.seekg(bytesRead);
             file.read(buffer.data() + bytesRead, bytesToRead);
             bytesRead += bytesToRead;
 
             // 데이터를 읽을 때마다 재생
-            PlayMusic(buffer.data(), bytesRead, wavHeader);
+            PlayMusic(buffer.data() + bytesRead - bytesToRead, bytesToRead, wavHeader);
         }
 
         // WAV 파일 닫기
@@ -112,6 +109,6 @@ void BufferAndPlayMusic(const CString& filePath) {
 }
 
 void WavFileHandler::ReadWavFile(const CString& filePath) {
-    std::thread readThread(BufferAndPlayMusic, filePath);
+    std::thread readThread(ReadDataAndPlayMusicThread, filePath);
     readThread.join();
 }
