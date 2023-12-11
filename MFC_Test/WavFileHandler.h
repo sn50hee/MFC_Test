@@ -1,6 +1,12 @@
 #pragma once
 #include <vector>
-
+#include <windows.h>
+#include <mmsystem.h>
+#include <iostream>
+#include <fstream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 struct WavHeader
 {
@@ -19,14 +25,33 @@ struct WavHeader
     int dataSize;
 };
 
-class WavFileHandler
-{
+class BufferedMusicPlayer {
 public:
-	void ReadWavFile(const CString& filePath);
+    BufferedMusicPlayer(const WavHeader& wavHeader);
+    ~BufferedMusicPlayer();
+
+    void play(const char* data, int dataSize);
+    void start();
+    void stop();
+
+private:
+    void playThreadFunc();
+
+private:
+    WavHeader wavHeader_;
+    std::vector<char> buffer_;
+    bool isPlaying_;
+    std::thread playThread_;
+    std::mutex mutex_;
+    std::condition_variable conditionVariable_;
+};
+
+class WavFileHandler {
+public:
+    void ReadWavFile(const CString& filePath);
     void PlayMusic(const char* data, int dataSize, const WavHeader& wavHeader);
 
 private:
-	WavHeader wavHeader;
-	std::vector<short> audioData;
+    WavHeader wavHeader;
+    std::vector<short> audioData;
 };
-
